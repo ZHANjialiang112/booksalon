@@ -3,9 +3,16 @@ import App from './App.vue'
 
 import ElementUI from 'element-ui'; // 2.1引入结构
 import 'element-ui/lib/theme-chalk/index.css'; // 2.2引入样式
+import axios from 'axios';
 
+Vue.prototype.$ajax = axios
 Vue.config.productionTip = false
+
+
 Vue.use(ElementUI); // 3.安装
+
+Vue.prototype._CONTEXTURL = 'http://localhost:12138';
+
 
 new Vue({
   render: h => h(App),

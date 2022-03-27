@@ -4,37 +4,35 @@
       <h2>用户登录</h2>
       <el-form v-model="loginParams">
         <div class="inputBox">
-          <input type="text" v-model="loginParams.eMail"  name="" required oninvalid="setCustomValidity('Please enter your count!');"
+          <input v-model="loginParams.email" name="" oninvalid="setCustomValidity('Please enter your count!');" required
+                 type="text"
                  oninput="setCustomValidity('');">
           <label>邮箱地址</label>
         </div>
         <div class="inputBox">
-          <input type="password" v-model="loginParams.passWord"  name="" required oninvalid="setCustomValidity('Please enter your password!');"
+          <input v-model="loginParams.password" name="" oninvalid="setCustomValidity('Please enter your password!');"
+                 required type="password"
                  oninput="setCustomValidity('');">
           <label>密码</label>
         </div>
-<!--        <el-input v-model="authCode" placeholder="请输入验证码"  style="width: 100px"></el-input><br>-->
-<!--        <input type="submit" name="" value="登录">-->
         <el-button style="color: #ffffff;"  type="text" @click="loginSubmit">登录</el-button>
         <p style="color: white">------------------------</p>
-<!--        <input type="submit" name="" value="注册">-->
         <el-button style="color: #606266;"  type="text" @click="dialogFormVisible = true,title = '用户注册'">注册</el-button>
-<!--        <input type="submit" name="" value="忘记密码">-->
         <el-button type="text" style="color: #606266;" @click="dialogFormVisible = true,title = '忘记/修改密码'">忘记/修改密码</el-button>
 
       </el-form>
     </div>
 
     <el-dialog :title=title  :visible.sync="dialogFormVisible" width="20%">
-      <el-form :model="form">
-        <el-form-item label="邮箱"  :label-width="formLabelWidth">
-          <el-input v-model="form.name" placeholder="输入用户邮箱" autocomplete="off"></el-input>
+      <el-form :model="registerParams">
+        <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-input v-model="registerParams.eMail" autocomplete="off" placeholder="输入用户邮箱"></el-input>
         </el-form-item>
         <el-form-item label="密码" :label-width="formLabelWidth">
-            <el-input v-model="form.name" placeholder="输入用户密码"   autocomplete="off"></el-input>
+          <el-input v-model="registerParams.passWord" autocomplete="off" placeholder="输入用户密码"></el-input>
         </el-form-item>
         <div style="display: inline">
-          <el-input v-model="authCode" placeholder="验证码"
+          <el-input v-model="registerParams.authCode" placeholder="验证码"
                     style="position: relative;  width: 100px;float: left;left: 25%"></el-input>
           <el-button style="position: absolute;  float:right;" @click="getAuthCode">获取验证码</el-button>
         </div>
@@ -56,23 +54,18 @@ export default {
   },
   data() {
     return {
-      title:'',
-      authCode:"",
-      loginParams:{
-        eMail:'',
-        passWord:''
+      title: '',
+      authCode: "",
+      loginParams: {
+        email: '',
+        password: ''
+      },
+      registerParams: {
+        eMail: '',
+        passWord: '',
+        authCod: ''
       },
       dialogFormVisible: false,
-      form: {
-        name: '',
-        region: '',
-        date1: '',
-        date2: '',
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: ''
-      },
       formLabelWidth: '120px'
     };
   },
@@ -80,8 +73,30 @@ export default {
     getAuthCode(){
     //TODO 添加获取用户验证码
     },
-    loginSubmit(){
-      console.log(this.loginParams);
+    loginSubmit() {
+      var _self = this;
+      var params = _self.loginParams;
+      var url = this._CONTEXTURL + "/user/login"
+      let config = {
+        "type": "post",
+        "url": url,
+        "data": params,
+      }
+      console.log(JSON.stringify(_self.loginParams));
+      this.$ajax.post(url, params, config).then(function (response) {
+        if (response.data.code === 200) {
+          _self.$message({
+            message: response.data.msg,
+            type: 'success'
+          });
+        } else {
+          _self.$message({
+            message: response.data.msg,
+            type: 'success'
+          });
+        }
+        console.log(response);
+      })
     }
   }
 }
