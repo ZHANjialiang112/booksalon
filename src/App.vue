@@ -1,16 +1,19 @@
 <template>
   <div id="app">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <!--    <HelloWorld msg="Welcome to Your Vue.js App"/>-->
+    <Index></Index>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+// import HelloWorld from './components/HelloWorld.vue';
+import Index from './components/Index';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    // HelloWorld,
+    Index
   }
 }
 </script>

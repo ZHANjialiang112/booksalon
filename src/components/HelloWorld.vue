@@ -4,21 +4,23 @@
       <h2>用户登录</h2>
       <el-form v-model="loginParams">
         <div class="inputBox">
-          <input v-model="loginParams.email" name="" oninvalid="setCustomValidity('Please enter your count!');" required
+          <input v-model="loginParams.userEmail" name="" oninvalid="setCustomValidity('Please enter your count!');"
+                 required
                  type="text"
                  oninput="setCustomValidity('');">
           <label>邮箱地址</label>
         </div>
         <div class="inputBox">
-          <input v-model="loginParams.password" name="" oninvalid="setCustomValidity('Please enter your password!');"
+          <input v-model="loginParams.userPassword" name=""
+                 oninvalid="setCustomValidity('Please enter your password!');"
                  required type="password"
                  oninput="setCustomValidity('');">
           <label>密码</label>
         </div>
-        <el-button style="color: #ffffff;"  type="text" @click="loginSubmit">登录</el-button>
+        <el-button style="color: #ffffff;" type="text" @click="loginSubmit">登录</el-button>
         <p style="color: white">------------------------</p>
-        <el-button style="color: #606266;"  type="text" @click="dialogFormVisible = true,title = '用户注册'">注册</el-button>
-        <el-button type="text" style="color: #606266;" @click="dialogFormVisible = true,title = '忘记/修改密码'">忘记/修改密码</el-button>
+        <el-button style="color: #606266;" type="text" @click="registerButton">注册</el-button>
+        <el-button style="color: #606266;" type="text" @click="updateButton">忘记/修改密码</el-button>
 
       </el-form>
     </div>
@@ -26,10 +28,11 @@
     <el-dialog :title=title  :visible.sync="dialogFormVisible" width="20%">
       <el-form :model="registerParams">
         <el-form-item label="邮箱" :label-width="formLabelWidth">
-          <el-input v-model="registerParams.eMail" autocomplete="off" placeholder="输入用户邮箱"></el-input>
+          <el-input v-model="registerParams.userEmail" autocomplete="off" placeholder="输入用户邮箱"></el-input>
         </el-form-item>
         <el-form-item label="密码" :label-width="formLabelWidth">
-          <el-input v-model="registerParams.passWord" autocomplete="off" placeholder="输入用户密码"></el-input>
+          <el-input v-model="registerParams.userPassword" autocomplete="off" placeholder="输入用户密码"
+                    type="password"></el-input>
         </el-form-item>
         <div style="display: inline">
           <el-input v-model="registerParams.authCode" placeholder="验证码"
@@ -40,7 +43,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+        <el-button type="primary" @click="registerAndUpdate">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -55,23 +58,83 @@ export default {
   data() {
     return {
       title: '',
-      authCode: "",
       loginParams: {
-        email: '',
-        password: ''
+        userEmail: '',
+        userPassword: ''
       },
       registerParams: {
-        eMail: '',
-        passWord: '',
-        authCod: ''
+        userEmail: '',
+        userPassword: '',
+        authCode: '',
+        titleType: '',//确定registerAndUpdate方法中的操作是注册还是更新修改密码(register,update)
       },
       dialogFormVisible: false,
       formLabelWidth: '120px'
     };
   },
-  methods:{
-    getAuthCode(){
-    //TODO 添加获取用户验证码
+  methods: {
+    registerButton() {
+      var _self = this;
+      _self.registerParams = _self.loginParams;
+      _self.dialogFormVisible = true;
+      _self.title = '用户注册';
+      _self.registerParams.titleType = 'register';
+    },
+    updateButton() {
+      var _self = this;
+      _self.registerParams = _self.loginParams;
+      _self.dialogFormVisible = true;
+      _self.title = '忘记/修改密码';
+      _self.registerParams.titleType = 'update';
+    },
+    getAuthCode() {
+      let _self = this;
+      var params = _self.registerParams;
+      var url = this._CONTEXTURL + "/user/getRegisterCode?titleType=" + _self.registerParams.titleType;
+      var config = {
+        "type": "post",
+        "url": url,
+        "data": JSON.stringify(params),
+      }
+      this.$ajax.post(url, params, config).then(function (response) {
+        if (response.data.code === 200) {
+          _self.$message({
+            message: response.data.msg,
+            type: 'success'
+          });
+        } else {
+          _self.$message({
+            message: response.data.msg,
+            type: 'warning'
+          });
+        }
+      });
+    },
+    registerAndUpdate() {
+      var _self = this;
+      var params = _self.registerParams;
+      var url = this._CONTEXTURL + "/user/updateAndRegister?authCod=" + _self.registerParams.authCode + "&titleType=" + _self.registerParams.titleType;
+      var config = {
+        "type": "post",
+        "url": url,
+        "data": params,
+      }
+      this.$ajax.post(url, params, config).then(function (response) {
+        if (response.data.code === 200) {
+          _self.$message({
+            message: response.data.msg + '，可以直接登录~',
+            type: 'success'
+          });
+          _self.loginParams.userEmail = _self.registerParams.userEmail;
+          _self.loginParams.userPassword = _self.registerParams.userPassword;
+          _self.dialogFormVisible = false;
+        } else {
+          _self.$message({
+            message: response.data.msg,
+            type: 'warning'
+          });
+        }
+      });
     },
     loginSubmit() {
       var _self = this;
@@ -82,7 +145,6 @@ export default {
         "url": url,
         "data": params,
       }
-      console.log(JSON.stringify(_self.loginParams));
       this.$ajax.post(url, params, config).then(function (response) {
         if (response.data.code === 200) {
           _self.$message({
@@ -95,7 +157,6 @@ export default {
             type: 'success'
           });
         }
-        console.log(response);
       })
     }
   }

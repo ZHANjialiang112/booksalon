@@ -10,7 +10,7 @@ Vue.config.productionTip = false
 
 
 Vue.use(ElementUI); // 3.安装
-
+//倒挂，定义全局请求路径
 Vue.prototype._CONTEXTURL = 'http://localhost:12138';
 
 
