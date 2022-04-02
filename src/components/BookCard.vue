@@ -15,8 +15,6 @@
               <el-avatar :size="230" shape="square"
                          src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                          style="margin-top: 15px"></el-avatar>
-              <!--                <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"-->
-              <!--                style="position: relative;float: left;width: 250px;height: 250px" >-->
               <div style="position:relative;float: left;width: 100%;height: 35px">
                 <span style="float:left;margin-left: 40px;font-size: 24px;text-align: left;">{{ item.name }}(著)</span>
               </div>
@@ -44,14 +42,11 @@
               </div>
             </div>
           </div>
-          <!--            <div style="position:relative;float: left;width: 100%;height: 35px">-->
-          <!--              <span style="float:left;margin-left: 100px;font-size: 24px;text-align: left;">{{item.name}}(著)</span>-->
-          <!--            </div>-->
           <hr>
           <div style="position: relative;  float: bottom">
             <div class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
               <el-tooltip class="item" content="评论" effect="light" placement="bottom-start">
-                <el-button><i class="el-icon-chat-dot-round"></i></el-button>
+                <el-button @click="showComment(item)"><i class="el-icon-chat-dot-round"></i></el-button>
               </el-tooltip>
             </div>
             <!--              收藏按钮-->
@@ -61,11 +56,37 @@
               </el-tooltip>
             </div>
           </div>
-          <br><br>
 
         </el-card>
+        <br>
       </el-col>
     </el-row>
+    <div class="dialogDeep">
+      <el-dialog
+          :visible.sync="dialogVisible"
+          title="全部评论"
+          width="25%">
+        <!--          style="float: right;"-->
+        <div v-for="(item,index) in commentList" :key="index">
+          <div>
+            <div style="float: left;font-size: 15px;font-weight: bold"><span>{{ item.nickName }}:</span>
+            </div>
+
+            <div class="commentInput">
+              <el-input v-model="item.comment"
+                        :disabled="true" style="background-color: white;border: none"></el-input>
+            </div>
+          </div>
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-footer>
+            <el-input v-model="comment" placeholder="评论"></el-input>
+          </el-footer>
+    <el-button @click="dialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+  </span>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -90,6 +111,22 @@ export default {
         {name: 'second'},
         {name: 'third'},
       ],
+      commentList: [
+        {nickName: 'hello', comment: '小垃圾小垃圾'},
+        {nickName: 'mark', comment: '小垃圾小垃圾'},
+        {nickName: 'lili', comment: '小垃圾小垃圾'},
+        {nickName: 'joey', comment: '小垃圾小垃圾'},
+        {nickName: 'dada', comment: '小垃圾小垃圾'},
+        {nickName: 'haha', comment: '小垃圾小垃圾'},
+        {nickName: 'hello', comment: '小垃圾小垃圾'},
+        {nickName: 'mark', comment: '小垃圾小垃圾'},
+        {nickName: 'lili', comment: '小垃圾小垃圾'},
+        {nickName: 'joey', comment: '小垃圾小垃圾'},
+        {nickName: 'dada', comment: '小垃圾小垃圾'},
+        {nickName: 'haha', comment: '小垃圾小垃圾'},
+      ],
+      dialogVisible: false,
+      comment: ''
     };
   },
   methods: {
@@ -109,6 +146,12 @@ export default {
     collectStarOff() {
       //TODO 关闭收藏按钮（用户取消收藏操作）
     },
+    showComment(item) {
+      let _self = this;
+      _self.dialogVisible = true;
+      console.log(item);
+      //TODO 展示所有的评论
+    }
   }
 }
 </script>
@@ -155,5 +198,17 @@ export default {
 
 .imageBackground4 >>> .el-avatar {
   background: #f19e37;
+}
+
+.commentInput >>> .el-input__inner {
+  background-color: white;
+  border: none;
+  line-height: 30px;
+  font-size: 15px;
+}
+
+.dialogDeep >>> .el-dialog {
+  float: right;
+  margin-right: 20px;
 }
 </style>

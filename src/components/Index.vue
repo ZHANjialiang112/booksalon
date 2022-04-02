@@ -1,7 +1,25 @@
 <template>
   <div>
     <el-container>
-      <el-header>Header</el-header>
+      <el-header>
+        <div class="buttonDeep">
+          <div v-if="user.nickName" style="float: right">
+            <el-tooltip class="item" content="退出登录" effect="light" placement="bottom">
+              <el-button style="margin-right: 50px"><i class="el-icon-s-custom" style="margin-right: 15px"></i>
+                <router-link to="/logout">{{ user.nickName }}</router-link>
+              </el-button>
+            </el-tooltip>
+            <el-button>
+              <router-link to="/homepage">个人首页</router-link>
+            </el-button>
+          </div>
+          <div v-if="user.nickName === ''" style="float: right">
+            <el-button><i class="el-icon-s-custom" style="margin-right: 10px"></i>
+              <router-link to="/login"> 登录</router-link>
+            </el-button>
+          </div>
+        </div>
+      </el-header>
       <el-main>
         <!--        书籍展示卡-->
         <BookCard></BookCard>
@@ -22,25 +40,10 @@ export default {
   },
   data() {
     return {
-      testText: '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，div 的宽度固定，写了样式覆盖掉el-tree 内部的结构' +
-          '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，',
-      testText1: '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果项目树结构时特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，，',
-      collectStar: 'el-icon-star-off',
-      showList: [
-        {name: 'first'},
-        {name: 'second'},
-        {name: 'third'},
-      ],
-      selected: 'A',
-      options: [
-        {text: 'One', value: 'A'},
-        {text: 'Two', value: 'B'},
-        {text: 'Three', value: 'C'}
-      ]
+      user: {
+        userEmail: '',
+        nickName: 'sdfsda'
+      }
     };
   },
   methods: {
@@ -75,5 +78,10 @@ body {
 
 .el-textarea__inner {
   border: 0px solid;
+}
+
+.buttonDeep >>> .el-button {
+  background-color: rgba(0, 0, 0, 0);
+  margin-right: 100px;
 }
 </style>
