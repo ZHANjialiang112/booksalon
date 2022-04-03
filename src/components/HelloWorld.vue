@@ -31,7 +31,7 @@
           <el-input v-model="registerParams.userEmail" autocomplete="off" placeholder="输入用户邮箱"></el-input>
         </el-form-item>
         <el-form-item label="密码" :label-width="formLabelWidth">
-          <el-input v-model="registerParams.userPassword" autocomplete="off" placeholder="输入用户密码"
+          <el-input v-model="registerParams.userPassword" :show-password="true" autocomplete="off" placeholder="输入用户密码"
                     type="password"></el-input>
         </el-form-item>
         <div style="display: inline">

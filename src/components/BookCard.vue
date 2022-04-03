@@ -5,7 +5,6 @@
       <el-col :span="8">
         <div :class="color" style="height: 30px;text-align: left">
           <el-avatar :size="68" shape="circle">{{ item.name }}</el-avatar>
-          <p></p>
         </div>
         <el-card :body-style="{padding: '0px'}" :header=item.name shadow="hover"
                  style="width: 800px ">
@@ -55,6 +54,17 @@
                 <el-button @click="changeCollectStar(item)"><i :class=collectStar></i></el-button>
               </el-tooltip>
             </div>
+            <!--            删除文章按钮-->
+            <div v-if="deleteButton" class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
+              <el-tooltip class="item" content="删除" effect="light" placement="bottom-start">
+                <el-button @click="showComment(item)"><i class="el-icon-delete"></i></el-button>
+              </el-tooltip>
+            </div>
+            <div v-if="deleteButton" class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
+              <el-tooltip class="item" content="修改" effect="light" placement="bottom-start">
+                <el-button @click="showComment(item)"><i class="el-icon-edit-outline"></i></el-button>
+              </el-tooltip>
+            </div>
           </div>
 
         </el-card>
@@ -67,20 +77,34 @@
           title="全部评论"
           width="25%">
         <!--          style="float: right;"-->
-        <div v-for="(item,index) in commentList" :key="index">
-          <div>
-            <div style="float: left;font-size: 15px;font-weight: bold"><span>{{ item.nickName }}:</span>
-            </div>
+        <div v-infinite-scroll="load" infinite-scroll-disabled="disabled" infinite-scroll-distance="10"
+             infinite-scroll-throttle-delay="500" style="overflow:auto;height: 500px">
+          <div v-for="(item,index) in commentList" :key="index">
+            <div>
+              <div style="float: left;font-size: 15px;font-weight: bold"><span>{{ item.nickName }}:</span>
+              </div>
 
-            <div class="commentInput">
-              <el-input v-model="item.comment"
-                        :disabled="true" style="background-color: white;border: none"></el-input>
+              <div class="inputDeep">
+                <el-input
+                    v-model="item.comment" :autosize="{ minRows: 1, maxRows: 8}"
+                    :readonly="true"
+                    style="background-color: white"
+                    type="textarea"
+                ></el-input>
+                <!--              单输入框去掉格式操作-->
+                <!--              <div class="commentInput">-->
+                <!--              <el-input v-model="item.comment"-->
+                <!--                        :disabled="true" style="background-color: white;border: none"></el-input>-->
+                <!--              </div>-->
+              </div>
             </div>
           </div>
+          <p v-if="loading">加载中<i class="el-icon-loading"></i></p>
+          <p v-if="noMore"><img src="../assets/comment.gif" style="width: 50px;height: 50px">人家有底线啦~</p>
         </div>
         <span slot="footer" class="dialog-footer">
           <el-footer>
-            <el-input v-model="comment" placeholder="评论"></el-input>
+            <el-input v-model="addComment" placeholder="评论"></el-input>
           </el-footer>
     <el-button @click="dialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
@@ -93,7 +117,13 @@
 <script>
 export default {
   name: "BookCard",
-  props: {},
+  props: {
+    deleteButton: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  components: {},
   data() {
     return {
       testText: '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
@@ -112,8 +142,8 @@ export default {
         {name: 'third'},
       ],
       commentList: [
-        {nickName: 'hello', comment: '小垃圾小垃圾'},
-        {nickName: 'mark', comment: '小垃圾小垃圾'},
+        {nickName: 'hello', comment: '小垃圾小垃圾接口和的接口洒红节坎大哈抠脚大汉金卡家后端接口撒开几点回家卡仕达奥斯卡级后端接口洒红节肯定会拿数据库接口哈师大接口和就看到'},
+        {nickName: 'mark', comment: '小垃圾小垃圾打算飞洒发书法发顺丰沙发沙发是分散发顺丰对方是犯法诉讼费'},
         {nickName: 'lili', comment: '小垃圾小垃圾'},
         {nickName: 'joey', comment: '小垃圾小垃圾'},
         {nickName: 'dada', comment: '小垃圾小垃圾'},
@@ -126,8 +156,18 @@ export default {
         {nickName: 'haha', comment: '小垃圾小垃圾'},
       ],
       dialogVisible: false,
-      comment: ''
+      addComment: '',
+      comment: {nickName: 'joey', comment: '小垃圾小垃圾'},
+      loading: false
     };
+  },
+  computed: {
+    noMore() {
+      return this.commentList.length >= 30
+    },
+    disabled() {
+      return this.loading || this.noMore
+    }
   },
   methods: {
     changeCollectStar(book) {
@@ -151,6 +191,15 @@ export default {
       _self.dialogVisible = true;
       console.log(item);
       //TODO 展示所有的评论
+    },
+    load() {
+      this.loading = true
+      setTimeout(() => {
+        this.commentList.push(this.comment);
+        this.commentList.push(this.comment);
+        this.commentList.push(this.comment);
+        this.loading = false;
+      }, 2000)
     }
   }
 }
@@ -210,5 +259,9 @@ export default {
 .dialogDeep >>> .el-dialog {
   float: right;
   margin-right: 20px;
+}
+
+.dialogDeepBody >>> .el-dialog__body {
+  height: 400px;
 }
 </style>
