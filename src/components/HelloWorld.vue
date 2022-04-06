@@ -140,17 +140,13 @@ export default {
       var _self = this;
       var params = _self.loginParams;
       var url = this._CONTEXTURL + "/user/login"
-      let config = {
-        "type": "post",
-        "url": url,
-        "data": params,
-      }
-      this.$ajax.post(url, params, config).then(function (response) {
+      this.$ajax.post(url, params).then(function (response) {
         if (response.data.code === 200) {
           _self.$message({
             message: response.data.msg,
             type: 'success'
           });
+          _self.router.push({path: '/index', query: {userEmail: _self.loginParams.userEmail}});
         } else {
           _self.$message({
             message: response.data.msg,

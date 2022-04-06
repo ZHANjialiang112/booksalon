@@ -4,9 +4,9 @@
             style="margin-left: 28%;">
       <el-col :span="8">
         <div :class="color" style="height: 30px;text-align: left">
-          <el-avatar :size="68" shape="circle">{{ item.name }}</el-avatar>
+          <el-avatar :size="68" shape="circle">{{ item.bkNickName }}</el-avatar>
         </div>
-        <el-card :body-style="{padding: '0px'}" :header=item.name shadow="hover"
+        <el-card :body-style="{padding: '0px'}" :header=item.bookName shadow="hover"
                  style="width: 800px ">
           <div>
             <!--              图书图片-->
@@ -15,7 +15,8 @@
                          src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                          style="margin-top: 15px"></el-avatar>
               <div style="position:relative;float: left;width: 100%;height: 35px">
-                <span style="float:left;margin-left: 40px;font-size: 24px;text-align: left;">{{ item.name }}(著)</span>
+                <span
+                    style="float:left;margin-left: 40px;font-size: 24px;text-align: left;">{{ item.bookAuther }}(著)</span>
               </div>
             </div>
             <!--              图书的简介和发布者的感悟-->
@@ -23,7 +24,7 @@
               <div class="inputDeep" style="height: 110px">
                 <span style="font-size: 20px;float: left">简介：</span>
                 <el-input
-                    v-model="testText1" :autosize="{ minRows: 2, maxRows: 3}"
+                    v-model="item.bookIntro" :autosize="{ minRows: 2, maxRows: 3}"
                     :readonly="true"
                     style="background-color: white"
                     type="textarea"
@@ -32,7 +33,7 @@
               <div class="inputDeep" style="height: 180px">
                 <span style="font-size: 20px;float: left">个人感悟：</span>
                 <el-input
-                    v-model="testText" :autosize="{ minRows: 2, maxRows: 6}"
+                    v-model="item.bookPerce" :autosize="{ minRows: 2, maxRows: 6}"
                     :readonly="true"
                     style="background-color: white"
                     type="textarea"
@@ -75,13 +76,14 @@
       <el-dialog
           :visible.sync="dialogVisible"
           title="全部评论"
+          @close='dialogClose'
           width="25%">
         <!--          style="float: right;"-->
-        <div v-infinite-scroll="load" infinite-scroll-disabled="disabled" infinite-scroll-distance="10"
+        <div v-infinite-scroll="load" :infinite-scroll-disabled="disabled" infinite-scroll-distance="20px"
              infinite-scroll-throttle-delay="500" style="overflow:auto;height: 500px">
           <div v-for="(item,index) in commentList" :key="index">
             <div>
-              <div style="float: left;font-size: 15px;font-weight: bold"><span>{{ item.nickName }}:</span>
+              <div style="float: left;font-size: 15px;font-weight: bold"><span>{{ item.commNickName }}:</span>
               </div>
 
               <div class="inputDeep">
@@ -104,10 +106,10 @@
         </div>
         <span slot="footer" class="dialog-footer">
           <el-footer>
-            <el-input v-model="addComment" placeholder="评论"></el-input>
+            <el-input v-model="comment" placeholder="评论"></el-input>
           </el-footer>
     <el-button @click="dialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+    <el-button type="primary" @click="addComment">确 定</el-button>
   </span>
       </el-dialog>
     </div>
@@ -122,6 +124,15 @@ export default {
       type: Boolean,
       required: true,
     },
+    showList: {
+      type: [Array],
+      required: true,
+    },
+    user: {
+      type: Object,
+      required: true,
+    },
+
   },
   components: {},
   data() {
@@ -136,38 +147,26 @@ export default {
       collectStar: 'el-icon-star-off',
       //用户可以选择既定的背景颜色
       color: 'imageBackground4',
-      showList: [
-        {name: 'first'},
-        {name: 'second'},
-        {name: 'third'},
-      ],
-      commentList: [
-        {nickName: 'hello', comment: '小垃圾小垃圾接口和的接口洒红节坎大哈抠脚大汉金卡家后端接口撒开几点回家卡仕达奥斯卡级后端接口洒红节肯定会拿数据库接口哈师大接口和就看到'},
-        {nickName: 'mark', comment: '小垃圾小垃圾打算飞洒发书法发顺丰沙发沙发是分散发顺丰对方是犯法诉讼费'},
-        {nickName: 'lili', comment: '小垃圾小垃圾'},
-        {nickName: 'joey', comment: '小垃圾小垃圾'},
-        {nickName: 'dada', comment: '小垃圾小垃圾'},
-        {nickName: 'haha', comment: '小垃圾小垃圾'},
-        {nickName: 'hello', comment: '小垃圾小垃圾'},
-        {nickName: 'mark', comment: '小垃圾小垃圾'},
-        {nickName: 'lili', comment: '小垃圾小垃圾'},
-        {nickName: 'joey', comment: '小垃圾小垃圾'},
-        {nickName: 'dada', comment: '小垃圾小垃圾'},
-        {nickName: 'haha', comment: '小垃圾小垃圾'},
-      ],
+      commentList: [],
       dialogVisible: false,
-      addComment: '',
-      comment: {nickName: 'joey', comment: '小垃圾小垃圾'},
-      loading: false
+      comment: '',
+      bookComment: [],
+      loading: false,
+      pageNum: 0,
+      pageSize: '10',
+      queryBookName: '',
+      commentTotal: 1,
+      commentSize: 0,
+      disabled: false,
+      whileDisabled: false
     };
   },
   computed: {
     noMore() {
-      return this.commentList.length >= 30
+      return this.commentSize >= this.commentTotal;
     },
-    disabled() {
-      return this.loading || this.noMore
-    }
+  },
+  mounted() {
   },
   methods: {
     changeCollectStar(book) {
@@ -186,20 +185,60 @@ export default {
     collectStarOff() {
       //TODO 关闭收藏按钮（用户取消收藏操作）
     },
+    //添加评论
+    addComment() {
+      var _self = this;
+      _self.bookComment.comment = _self.comment;
+      _self.bookComment.commNickName = this.user.nickName;
+      _self.bookComment.createTime = '';
+      console.log(_self.bookComment);
+    },
+    //展示评论对话框
     showComment(item) {
       let _self = this;
+      _self.commentList = [];
       _self.dialogVisible = true;
-      console.log(item);
-      //TODO 展示所有的评论
+      _self.queryBookName = item.bookName;
+      let url = _self._CONTEXTURL + "/bookComm/comList?bookName=" + _self.queryBookName + "&pageNum=1&pageSize=5";
+      _self.$ajax.get(url).then(function (response) {
+        _self.commentSize = 0;
+        _self.commentTotal = response.data.total;
+        _self.bookComment = response.data.data[0];
+        if (_self.pageNum !== 0) {
+          _self.pageNum = 0;
+          _self.load();
+        }
+      });
+    },
+    //获取所有评论（进行分页）
+    getComment() {
+      let _self = this;
+      let url = _self._CONTEXTURL + "/bookComm/comList?bookName=" + _self.queryBookName + "&pageNum=" + _self.pageNum + "&pageSize=" + _self.pageSize;
+      _self.$ajax.get(url).then(function (response) {
+        if (response.data.code === 200) {
+          _self.commentList = [..._self.commentList, ...response.data.data]
+          _self.commentSize = _self.commentList.length;
+          _self.disabled = false;
+        }
+      });
     },
     load() {
-      this.loading = true
-      setTimeout(() => {
-        this.commentList.push(this.comment);
-        this.commentList.push(this.comment);
-        this.commentList.push(this.comment);
+      this.loading = true;
+      if (this.commentSize < this.commentTotal) {
+        this.disabled = true;
+        setTimeout(() => {
+          this.pageNum += 1;
+          // console.log(this.pageNum);
+          this.getComment();
+          this.loading = false;
+        }, 500);
+      } else {
         this.loading = false;
-      }, 2000)
+        this.disabled = true;
+      }
+    },
+    dialogClose() {
+      this.disabled = false;
     }
   }
 }

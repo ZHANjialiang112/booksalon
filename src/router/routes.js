@@ -3,7 +3,8 @@ import HelloWorld from "@/components/HelloWorld";
 import HomePage from "@/components/HomePage";
 
 export default [
-    {path: '/index', component: Index},
-    {path: '/login', component: HelloWorld},
-    {path: '/homepage', component: HomePage}
+    {path: '/', component: Index},
+    {name: 'index', path: '/index', component: Index},
+    {name: 'login', path: '/login', component: HelloWorld},
+    {name: 'homepage', path: '/homepage', component: HomePage}
 ]

@@ -8,6 +8,13 @@
               <el-button slot="prepend"><a><i class="el-icon-search" style="width: 20px;"></i></a></el-button>
             </el-input>
           </div>
+          <div class="buttonDeep menuDeep menuDeepItem0 menuDeepItem1 menuDeepItem2 menuDeepHo"
+               style="float: left;width: 150px;margin-left: 400px">
+            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+              <el-menu-item index="1">推荐</el-menu-item>
+              <el-menu-item index="3">热榜</el-menu-item>
+            </el-menu>
+          </div>
           <div class="buttonDeep">
             <div v-if="user.nickName" style="float: right">
               <el-tooltip class="item" content="退出登录" effect="light" placement="bottom">
@@ -16,7 +23,8 @@
                 </el-button>
               </el-tooltip>
               <el-button>
-                <router-link to="/homepage">个人首页</router-link>
+                <router-link :to="{name:'homepage',query:{userEmail:user.userEmail,nickName:user.nickName}}">个人首页
+                </router-link>
               </el-button>
             </div>
             <div v-if="user.nickName === ''" style="float: right">
@@ -29,7 +37,7 @@
       </el-header>
       <el-main>
         <!--        书籍展示卡-->
-        <BookCard :delete-button="false"></BookCard>
+        <BookCard :delete-button="false" :show-list="showList" :user="user"></BookCard>
       </el-main>
       <el-footer>Footer</el-footer>
     </el-container>
@@ -47,14 +55,37 @@ export default {
   },
   data() {
     return {
+      activeIndex: '1',
       user: {
         userEmail: '',
-        nickName: 'sdfsda'
+        nickName: ''
       },
-      search: ''
+      search: '',
+      // showList: [],
+      showList: [],
+      pageNum: 1,
+      pageSize: 10,
     };
   },
+  mounted() {
+    this.getUser();
+    this.recommendBookList();
+  },
   methods: {
+    handleSelect(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    getUser() {
+      var _self = this;
+      _self.user.userEmail = _self.$route.query.userEmail;
+      var userEmail = _self.$route.query.userEmail;
+      var url = _self._CONTEXTURL + '/user/getUser?userEmail=' + userEmail;
+      _self.$ajax.get(url).then(function (response) {
+        if (response.data.code === 200) {
+          _self.user.nickName = response.data.data.nickName;
+        }
+      });
+    },
     changeCollectStar(book) {
       var _self = this;
       if (_self.collectStar === 'el-icon-star-off') {
@@ -64,6 +95,26 @@ export default {
         console.log(book);
         _self.collectStar = 'el-icon-star-off';
       }
+    },
+    //推荐书籍列表
+    recommendBookList() {
+      var _self = this;
+      var url = _self._CONTEXTURL + '/book/getBookPage?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize;
+      var params = {
+        isSubmit: 1,
+        isCheckSucc: 1,
+      };
+      _self.$ajax.post(url, params).then(function (response) {
+        console.log(response);
+        if (response.data.code === 200) {
+          _self.showList = response.data.data;
+        } else {
+          _self.$message({
+            message: response.data.msg,
+            type: 'error'
+          });
+        }
+      });
     },
     collectStarOn() {
       //TODO 点亮收藏按钮(用户实现收藏操作)
@@ -102,5 +153,29 @@ body {
 
 .searchButtonDeep >>> .el-button {
   background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeep >>> .el-menu {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeepItem >>> .el-menu-item {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeepItem0 >>> .el-menu-item:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeepItem1 >>> .el-menu-item:focus {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeepItem2 >>> .el-menu-item:active {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.menuDeepHo >>> .el-menu.el-menu--horizontal {
+  border-bottom: none;
 }
 </style>

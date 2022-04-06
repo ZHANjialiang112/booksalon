@@ -16,7 +16,7 @@
             <!--              </el-button>-->
             <!--            </el-tooltip>-->
             <el-button style="margin-right: 15px;margin-left: 120px">
-              <router-link to="/index">首页</router-link>
+              <router-link :to="{name:'index',query:{userEmail:user.userEmail}}">首页</router-link>
             </el-button>
             <el-button v-if="showDeleteButton" style="margin-right: 15px" @click="collectBooks">
               查看收藏
@@ -48,7 +48,7 @@
       </el-header>
       <el-main>
         <!--        书籍展示卡-->
-        <BookCard :delete-button="showDeleteButton"></BookCard>
+        <BookCard :delete-button="showDeleteButton" :show-list="showList"></BookCard>
       </el-main>
       <el-footer>Footer</el-footer>
     </el-container>
@@ -70,7 +70,28 @@
         <el-form-item label="个人感悟">
           <el-input placeholder="输入书名"></el-input>
         </el-form-item>
+        <!--      <el-form-item label="书籍图片">-->
+        <!--        <el-button @click="updateImageToSM_MS">上传</el-button>-->
+        <!--      </el-form-item>-->
+        <!--        <form action="" enctype="multipart/form-data">-->
+        <!--          <input id="file" class="filepath"  type="file"><br>-->
+        <!--          <img src="" id="show" width="200">-->
+        <!--        </form>-->
+        <!--        <el-upload-->
+        <!--            class="avatar-uploader"-->
+        <!--            action="https://sm.ms/api/v2/upload"-->
+        <!--            :headers="headers"-->
+        <!--            :data="requstData"-->
+        <!--            name="smfile"-->
+        <!--            :show-file-list="false"-->
+        <!--            accept=".jpg,.jpeg,.png,.gif.JPG,.JPEG,.PNG,.GIF"-->
+        <!--            :before-upload="beforeAvatarUpload"-->
+        <!--            :on-success="handleAvatarSuccess">-->
+        <!--          <img v-if="imageUrl" :src="imageUrl" class="avatar">-->
+        <!--          <i v-else class="el-icon-plus avatar-uploader-icon"></i>-->
+        <!--        </el-upload>-->
       </el-form>
+
       <span slot="footer" class="dialog-footer">
     <el-button @click="addBookDialog = false">取 消</el-button>
     <el-button type="primary" @click="addNewBook">确 定</el-button>
@@ -101,13 +122,38 @@ export default {
   data() {
     return {
       showDeleteButton: true,
-      user: {nickName: 'hello'},
+      showList: [
+        {name: 'first'},
+        {name: 'second'},
+        {name: 'third'},
+      ],
+      user: {
+        userEmail: '',
+        nickName: ''
+      },
       color: 'imageBackground4',
       addBookDialog: false,
-      changeImgDialog: false
+      changeImgDialog: false,
+      imageUrl: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+      bookFile: '',
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "Authorization": this._Authorization
+      },
+      requstData: {
+        format: 'json'
+      }
     }
   },
+  mounted() {
+    this.getUser();
+  },
   methods: {
+    getUser() {
+      var _self = this;
+      _self.user.userEmail = this.$route.query.userEmail;
+      _self.user.nickName = this.$route.query.nickName;
+    },
     collectBooks() {
       let _self = this;
       _self.showDeleteButton = false;
@@ -125,7 +171,52 @@ export default {
     changeImgAndNickname() {
       let _self = this;
       _self.changeImgDialog = false;
+    },
+    //  图片上传
+    updateImageToSM_MS() {
+      let _self = this;
+      // var file1 = this.files[0].name;
+      // console.log(file1);
+      var file = document.getElementById('updateImg').value;
+      console.log(file);
+      let formData = new FormData();
+      formData.append('smfile', file);
+      formData.append('format', 'json');
+      // console.log("图书："+formData);
+      // let params = {};
+      // params.format = "json";
+      // params.smfile = file;
+      let url = 'https://sm.ms/api/v2/upload';
+      var config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": _self._Authorization
+        }
+      }
+      _self.$ajax.post(url, formData, config).then(function (response) {
+        console.log("返回值" + response);
+      });
+
+    },
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) {
+      console.log(file);
+      let types = ['image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/png'];
+      const isImage = types.includes(file.type);
+      const isLtSize = file.size / 1024 / 1024 < 2;
+      if (!isImage) {
+        this.$message.error('上传图片只能是 JPG、JPEG、gif、bmp、PNG 格式!');
+        return false;
+      }
+      if (!isLtSize) {
+        this.$message.error('上传图片大小不能超过 2MB!');
+        return false;
+      }
+      return isImage && isLtSize;
     }
+
   }
 
 }
@@ -156,5 +247,32 @@ export default {
 
 .imageBackground4 >>> .el-avatar {
   background: #f19e37;
+}
+
+.avatar-uploader >>> .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-uploader >>> .el-upload:hover {
+  border-color: #409EFF;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  line-height: 178px;
+  text-align: center;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
 }
 </style>
