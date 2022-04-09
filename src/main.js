@@ -14,7 +14,6 @@ Vue.use(ElementUI); // 3.安装
 //倒挂，定义全局请求路径
 Vue.prototype._CONTEXTURL = 'http://localhost:12138';
 Vue.prototype._Authorization = 'SYLVhbksPaJoFyS1XvgmoYanRqSPTIY0';
-
 //路由导包
 
 

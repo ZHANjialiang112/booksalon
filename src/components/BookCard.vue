@@ -46,13 +46,24 @@
           <div style="position: relative;  float: bottom">
             <div class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
               <el-tooltip class="item" content="评论" effect="light" placement="bottom-start">
-                <el-button @click="showComment(item)"><i class="el-icon-chat-dot-round"></i></el-button>
+                <el-button @click="showComment(item)"><i
+                    class="el-icon-chat-dot-round"></i><br><a>{{ item.commNum }}</a></el-button>
               </el-tooltip>
             </div>
             <!--              收藏按钮-->
-            <div class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
+            <div v-if="item.currUserCollect != 1" class="buttonDeep buttonIconFocus buttonIconHover"
+                 style="float: right;width: 10%">
               <el-tooltip class="item" content="收藏" effect="light" placement="bottom-start">
-                <el-button @click="changeCollectStar(item)"><i :class=collectStar></i></el-button>
+                <el-button @click="changeCollectStar(item)"><i
+                    class="el-icon-star-off"></i><br><a>{{ item.collectNum }}</a></el-button>
+              </el-tooltip>
+            </div>
+            <!--            取消收藏按钮-->
+            <div v-if="item.currUserCollect == 1 " class="buttonDeep buttonIconFocus buttonIconHover"
+                 style="float: right;width: 10%">
+              <el-tooltip class="item" content="取消收藏" effect="light" placement="bottom-start">
+                <el-button @click="changeCollectStar(item)"><i
+                    class="el-icon-star-on"></i><br><a>{{ item.collectNum }}</a></el-button>
               </el-tooltip>
             </div>
             <!--            删除文章按钮-->
@@ -79,7 +90,7 @@
           @close='dialogClose'
           width="25%">
         <!--          style="float: right;"-->
-        <div v-infinite-scroll="load" :infinite-scroll-disabled="disabled" infinite-scroll-distance="20px"
+        <div v-infinite-scroll="load" :infinite-scroll-disabled="disabled" infinite-scroll-distance="50px"
              infinite-scroll-throttle-delay="500" style="overflow:auto;height: 500px">
           <div v-for="(item,index) in commentList" :key="index">
             <div>
@@ -93,11 +104,6 @@
                     style="background-color: white"
                     type="textarea"
                 ></el-input>
-                <!--              单输入框去掉格式操作-->
-                <!--              <div class="commentInput">-->
-                <!--              <el-input v-model="item.comment"-->
-                <!--                        :disabled="true" style="background-color: white;border: none"></el-input>-->
-                <!--              </div>-->
               </div>
             </div>
           </div>
@@ -106,7 +112,7 @@
         </div>
         <span slot="footer" class="dialog-footer">
           <el-footer>
-            <el-input v-model="comment" placeholder="评论"></el-input>
+            <el-input v-model="comment" clearable placeholder="评论"></el-input>
           </el-footer>
     <el-button @click="dialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="addComment">确 定</el-button>
@@ -137,13 +143,6 @@ export default {
   components: {},
   data() {
     return {
-      testText: '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，div 的宽度固定，写了样式覆盖掉el-tree 内部的结构' +
-          '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，',
-      testText1: '在使用element-ui 框架做vue 项目树结构时，发现需要固定树结构的宽度，而且树结构的字段有可能会特别长，' +
-          '一行根本无法显示，加长又会影响展示效果项目树结构时特别长，' +
-          '一行根本无法显示，加长又会影响展示效果，，',
       collectStar: 'el-icon-star-off',
       //用户可以选择既定的背景颜色
       color: 'imageBackground4',
@@ -158,7 +157,14 @@ export default {
       commentTotal: 1,
       commentSize: 0,
       disabled: false,
-      whileDisabled: false
+      whileDisabled: false,
+      currBook: {},
+      config: {
+        headers: {
+          "Token": window.localStorage.getItem("Token")
+        }
+      }
+
     };
   },
   computed: {
@@ -188,33 +194,77 @@ export default {
     //添加评论
     addComment() {
       var _self = this;
-      _self.bookComment.comment = _self.comment;
-      _self.bookComment.commNickName = this.user.nickName;
-      _self.bookComment.createTime = '';
-      console.log(_self.bookComment);
+      if (_self.user == null) {
+        _self.$message({
+          message: '请先登录',
+          type: 'warning'
+        });
+        return;
+      }
+      if (_self.comment == null || _self.comment === '') {
+        //  提示评论不能为空
+        _self.$message({
+          message: '评论不能为空,请评论后提交！',
+          type: 'warning'
+        })
+      } else {
+        console.log("hello==" + _self.currBook.bkNickName);
+        var url = _self._CONTEXTURL + "/bookComm/addComm";
+        var params = {};
+        params.bookId = _self.currBook.bookId;
+        params.bookName = _self.currBook.bookName;
+        params.commNickName = _self.user.nickName;
+        params.comment = _self.comment;
+        params.createTime = new Date();
+        params.nickName = _self.currBook.bkNickName;
+        _self.bookComment.bookId = params.bookId;
+        _self.bookComment.bookName = params.bookName;
+        _self.bookComment.commNickName = params.commNickName;
+        _self.bookComment.comment = params.comment;
+        _self.bookComment.createTime = params.createTime;
+        _self.bookComment.nickName = params.nickName;
+        _self.$ajax.put(url, params, _self.config).then(function (response) {
+          if (response.data.code === 200) {
+            debugger;
+            _self.currBook.commNum = _self.currBook.commNum + 1;
+            _self.commentList.push(_self.bookComment);
+            _self.comment = '';
+          } else {
+            _self.$message({
+              message: response.data.message,
+              type: 'warning'
+            })
+            _self.comment = '';
+          }
+        });
+      }
     },
     //展示评论对话框
     showComment(item) {
       let _self = this;
+      _self.disabled = false;
+      _self.currBook = item;
+      console.log(JSON.stringify(_self.currBook));
       _self.commentList = [];
       _self.dialogVisible = true;
       _self.queryBookName = item.bookName;
-      let url = _self._CONTEXTURL + "/bookComm/comList?bookName=" + _self.queryBookName + "&pageNum=1&pageSize=5";
-      _self.$ajax.get(url).then(function (response) {
+      let url = _self._CONTEXTURL + "/base/comList?bookName=" + _self.queryBookName + "&pageNum=1&pageSize=5";
+      _self.$ajax.get(url, _self._config).then(function (response) {
         _self.commentSize = 0;
         _self.commentTotal = response.data.total;
-        _self.bookComment = response.data.data[0];
-        if (_self.pageNum !== 0) {
-          _self.pageNum = 0;
-          _self.load();
-        }
+        _self.pageNum = 0;
+        _self.load();
+        // if (_self.pageNum !== 1) {
+        //   _self.pageNum = 0;
+        //   _self.load();
+        // }
       });
     },
     //获取所有评论（进行分页）
     getComment() {
       let _self = this;
-      let url = _self._CONTEXTURL + "/bookComm/comList?bookName=" + _self.queryBookName + "&pageNum=" + _self.pageNum + "&pageSize=" + _self.pageSize;
-      _self.$ajax.get(url).then(function (response) {
+      let url = _self._CONTEXTURL + "/base/comList?bookName=" + _self.queryBookName + "&pageNum=" + _self.pageNum + "&pageSize=" + _self.pageSize;
+      _self.$ajax.get(url, _self._config).then(function (response) {
         if (response.data.code === 200) {
           _self.commentList = [..._self.commentList, ...response.data.data]
           _self.commentSize = _self.commentList.length;
@@ -228,10 +278,9 @@ export default {
         this.disabled = true;
         setTimeout(() => {
           this.pageNum += 1;
-          // console.log(this.pageNum);
           this.getComment();
           this.loading = false;
-        }, 500);
+        }, 1000);
       } else {
         this.loading = false;
         this.disabled = true;
@@ -239,6 +288,7 @@ export default {
     },
     dialogClose() {
       this.disabled = false;
+      this.comment = '';
     }
   }
 }

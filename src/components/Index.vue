@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="hidden hidden01">
     <el-container>
       <el-header>
         <div>
@@ -12,7 +12,7 @@
                style="float: left;width: 150px;margin-left: 400px">
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
               <el-menu-item index="1">推荐</el-menu-item>
-              <el-menu-item index="3">热榜</el-menu-item>
+              <el-menu-item index="2">热榜</el-menu-item>
             </el-menu>
           </div>
           <div class="buttonDeep">
@@ -58,7 +58,8 @@ export default {
       activeIndex: '1',
       user: {
         userEmail: '',
-        nickName: ''
+        nickName: '',
+        userId: ''
       },
       search: '',
       // showList: [],
@@ -72,17 +73,25 @@ export default {
     this.recommendBookList();
   },
   methods: {
-    handleSelect(key, keyPath) {
-      console.log(key, keyPath);
+    handleSelect(key) {
+      var _self = this;
+      console.log(key);
+      if (key === '1') {
+        _self.recommendBookList();
+      }
+      if (key === '2') {
+        _self.hotBookList();
+      }
     },
     getUser() {
       var _self = this;
       _self.user.userEmail = _self.$route.query.userEmail;
       var userEmail = _self.$route.query.userEmail;
-      var url = _self._CONTEXTURL + '/user/getUser?userEmail=' + userEmail;
+      var url = _self._CONTEXTURL + '/base/getUser?userEmail=' + userEmail;
       _self.$ajax.get(url).then(function (response) {
         if (response.data.code === 200) {
           _self.user.nickName = response.data.data.nickName;
+          _self.user.userId = response.data.data.userId;
         }
       });
     },
@@ -99,13 +108,8 @@ export default {
     //推荐书籍列表
     recommendBookList() {
       var _self = this;
-      var url = _self._CONTEXTURL + '/book/getBookPage?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize;
-      var params = {
-        isSubmit: 1,
-        isCheckSucc: 1,
-      };
-      _self.$ajax.post(url, params).then(function (response) {
-        console.log(response);
+      var url = _self._CONTEXTURL + '/base/getBookPage?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + _self.user.userId;
+      _self.$ajax.post(url).then(function (response) {
         if (response.data.code === 200) {
           _self.showList = response.data.data;
         } else {
@@ -116,11 +120,20 @@ export default {
         }
       });
     },
-    collectStarOn() {
-      //TODO 点亮收藏按钮(用户实现收藏操作)
-    },
-    collectStarOff() {
-      //TODO 关闭收藏按钮（用户取消收藏操作）
+    //热榜书籍查询
+    hotBookList() {
+      var _self = this;
+      var url = _self._CONTEXTURL + '/base/getHotBook?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + _self.search + '&userId=' + _self.user.userId;
+      _self.$ajax.post(url).then(function (response) {
+        if (response.data.code === 200) {
+          _self.showList = response.data.data;
+        } else {
+          _self.$message({
+            message: response.data.msg,
+            type: 'error'
+          });
+        }
+      });
     },
   }
 }
@@ -129,6 +142,7 @@ export default {
 <style scoped>
 body {
   border: 0px solid white;
+  overflow: hidden;
 }
 
 .el-textarea.is-disabled .el-textarea__inner {
@@ -177,5 +191,17 @@ body {
 
 .menuDeepHo >>> .el-menu.el-menu--horizontal {
   border-bottom: none;
+}
+
+.hidden >>> .el-aside {
+  height: 100vh;
+  background-color: #ffffff;
+  overflow-y: auto;
+  -ms-overflow-style: none; /* Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hidden01 >>> ::-webkit-scrollbar {
+  display: none; /* WebKit */
 }
 </style>

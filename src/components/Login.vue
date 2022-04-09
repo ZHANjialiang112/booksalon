@@ -51,7 +51,7 @@
 
 <script>
 export default {
-  name: 'HelloWorld',
+  name: 'Login',
   props: {
     msg: String
   },
@@ -139,13 +139,14 @@ export default {
     loginSubmit() {
       var _self = this;
       var params = _self.loginParams;
-      var url = this._CONTEXTURL + "/user/login"
+      var url = this._CONTEXTURL + "/base/login"
       this.$ajax.post(url, params).then(function (response) {
         if (response.data.code === 200) {
           _self.$message({
             message: response.data.msg,
             type: 'success'
           });
+          window.localStorage.setItem("Token", response.data.data);
           _self.router.push({path: '/index', query: {userEmail: _self.loginParams.userEmail}});
         } else {
           _self.$message({
