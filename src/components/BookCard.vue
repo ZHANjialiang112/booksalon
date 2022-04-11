@@ -1,9 +1,10 @@
 <template>
   <div>
+    <span v-if="showList.length === 0">空空如也....</span>
     <el-row v-for="(item,index) in showList" :key="index" :gutter="12"
             style="margin-left: 28%;">
       <el-col :span="8">
-        <div :class="color" style="height: 30px;text-align: left">
+        <div :class="item.userImgurl" style="height: 30px;text-align: left">
           <el-avatar :size="68" shape="circle">{{ item.bkNickName }}</el-avatar>
         </div>
         <el-card :body-style="{padding: '0px'}" :header=item.bookName shadow="hover"
@@ -143,7 +144,6 @@ export default {
   components: {},
   data() {
     return {
-      collectStar: 'el-icon-star-off',
       //用户可以选择既定的背景颜色
       color: 'imageBackground4',
       commentList: [],
@@ -159,7 +159,7 @@ export default {
       disabled: false,
       whileDisabled: false,
       currBook: {},
-      config: {
+      headerConfig: {
         headers: {
           "Token": window.localStorage.getItem("Token")
         }
@@ -175,28 +175,63 @@ export default {
   mounted() {
   },
   methods: {
+    //用户收藏的相关操作（判断用户是否登录）
     changeCollectStar(book) {
       var _self = this;
-      if (_self.collectStar === 'el-icon-star-off') {
-        console.log(book);
-        _self.collectStar = 'el-icon-star-on';
-      } else if (_self.collectStar === 'el-icon-star-on') {
-        console.log(book);
-        _self.collectStar = 'el-icon-star-off';
+      if (_self.user.userId == null || _self.user.userId === '') {
+        _self.$message({
+          message: '请先登录后再收藏！',
+          type: 'warning'
+        });
+        return;
       }
-    },
-    collectStarOn() {
-      //TODO 点亮收藏按钮(用户实现收藏操作)
-    },
-    collectStarOff() {
-      //TODO 关闭收藏按钮（用户取消收藏操作）
+      if (book.currUserCollect === '0') {
+        let url = _self._CONTEXTURL + '/bookColl/addColl?collUserId=' + _self.user.userId + '&bctBookId=' + book.bookId + '&userEmail=' + book.userEmail;
+        _self.$ajax.post(url, {}, _self.headerConfig).then(function (res) {
+          if (res.data.code === 200) {
+            _self.$message({
+              message: '收藏成功',
+              type: 'success'
+            });
+            book.currUserCollect = '1';
+            book.collectNum = parseInt(book.collectNum) + 1;
+          } else if (res.data.code === 401) {
+            _self.$message({
+              message: res.data.msg,
+              type: 'warning'
+            });
+          }
+        })
+      } else if (book.currUserCollect === '1') {
+        let url = _self._CONTEXTURL + '/bookColl/cancelColl?collUserId=' + _self.user.userId + '&bctBookId=' + book.bookId + '&userEmail=' + book.userEmail;
+        _self.$ajax.post(url, {}, _self.headerConfig).then(function (res) {
+          if (res.data.code === 200) {
+            _self.$message({
+              message: '取消收藏成功',
+              type: 'success'
+            });
+            book.currUserCollect = '0';
+            book.collectNum = parseInt(book.collectNum) - 1;
+          } else if (res.data.code === 401) {
+            _self.$message({
+              message: res.data.code + "/" + res.data.msg,
+              type: 'warning'
+            });
+          } else {
+            _self.$message({
+              message: res.data.code + "/" + res.data.msg,
+              type: 'warning'
+            });
+          }
+        })
+      }
     },
     //添加评论
     addComment() {
       var _self = this;
-      if (_self.user == null) {
+      if (_self.user.userId == null || _self.user.userId === '') {
         _self.$message({
-          message: '请先登录',
+          message: '请先登录后再评论！',
           type: 'warning'
         });
         return;
@@ -223,9 +258,8 @@ export default {
         _self.bookComment.comment = params.comment;
         _self.bookComment.createTime = params.createTime;
         _self.bookComment.nickName = params.nickName;
-        _self.$ajax.put(url, params, _self.config).then(function (response) {
+        _self.$ajax.put(url, params, _self.headerConfig).then(function (response) {
           if (response.data.code === 200) {
-            debugger;
             _self.currBook.commNum = _self.currBook.commNum + 1;
             _self.commentList.push(_self.bookComment);
             _self.comment = '';
@@ -244,12 +278,11 @@ export default {
       let _self = this;
       _self.disabled = false;
       _self.currBook = item;
-      console.log(JSON.stringify(_self.currBook));
       _self.commentList = [];
       _self.dialogVisible = true;
       _self.queryBookName = item.bookName;
       let url = _self._CONTEXTURL + "/base/comList?bookName=" + _self.queryBookName + "&pageNum=1&pageSize=5";
-      _self.$ajax.get(url, _self._config).then(function (response) {
+      _self.$ajax.get(url, _self.headerConfig).then(function (response) {
         _self.commentSize = 0;
         _self.commentTotal = response.data.total;
         _self.pageNum = 0;

@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div class=" hidden hidden01">
     <el-container>
       <el-header>
         <div class="buttonDeep">
           <!--          添加查询框-->
           <div v-if="user.nickName" style="float: right">
-            <div :class="color" style="height: 30px;text-align: left;margin-right: 15px">
+            <div :class="user.userImgurl" style="height: 30px;text-align: left;margin-right: 15px">
               <el-button>
                 <el-avatar :size="68" shape="circle">{{ user.nickName }}</el-avatar>
               </el-button>
@@ -19,10 +19,10 @@
               <router-link :to="{name:'index',query:{userEmail:user.userEmail}}">首页</router-link>
             </el-button>
             <el-button v-if="showDeleteButton" style="margin-right: 15px" @click="collectBooks">
-              查看收藏
+              我的收藏
             </el-button>
             <el-button v-if="!showDeleteButton" style="margin-right: 15px" @click="backCollect">
-              返回
+              个人首页
             </el-button>
             <el-dropdown trigger="click">
             <span class="el-dropdown-link">
@@ -48,7 +48,7 @@
       </el-header>
       <el-main>
         <!--        书籍展示卡-->
-        <BookCard :delete-button="showDeleteButton" :show-list="showList"></BookCard>
+        <BookCard :delete-button="showDeleteButton" :show-list="showList" :user="user"></BookCard>
       </el-main>
       <el-footer>Footer</el-footer>
     </el-container>
@@ -57,55 +57,68 @@
         :visible.sync="addBookDialog"
         title="添加新文章"
         width="30%">
-      <el-form class="demo-ruleForm" label-width="100px">
-        <el-form-item label="分享书名">
-          <el-input placeholder="输入书名"></el-input>
+      <el-form ref="addNewBookParams" :model="addNewBookParams" :rules="rules" class="demo-ruleForm"
+               label-width="100px">
+        <el-form-item label="分享书名" prop="bookName">
+          <el-input v-model="addNewBookParams.bookName"
+                    placeholder="输入书名"></el-input>
         </el-form-item>
-        <el-form-item label="作者">
-          <el-input placeholder="输入书名"></el-input>
+        <el-form-item label="作者" prop="bookAuther">
+          <el-input v-model="addNewBookParams.bookAuther"
+                    placeholder="输入作者名称"></el-input>
         </el-form-item>
-        <el-form-item label="简介">
-          <el-input placeholder="输入书名"></el-input>
+        <el-form-item label="简介" prop="bookIntro">
+          <el-input v-model="addNewBookParams.bookIntro"
+                    :autosize="{ minRows: 2, maxRows: 5}" maxlength="1000"
+                    placeholder="书籍介绍"
+                    show-word-limit
+                    type="textarea"></el-input>
         </el-form-item>
-        <el-form-item label="个人感悟">
-          <el-input placeholder="输入书名"></el-input>
+        <el-form-item label="个人感悟" prop="bookPerce">
+          <el-input v-model="addNewBookParams.bookPerce"
+                    :autosize="{ minRows: 2, maxRows: 5}" maxlength="1500"
+                    placeholder="输入读后感"
+                    show-word-limit
+                    type="textarea"></el-input>
         </el-form-item>
-        <!--      <el-form-item label="书籍图片">-->
-        <!--        <el-button @click="updateImageToSM_MS">上传</el-button>-->
-        <!--      </el-form-item>-->
-        <!--        <form action="" enctype="multipart/form-data">-->
-        <!--          <input id="file" class="filepath"  type="file"><br>-->
-        <!--          <img src="" id="show" width="200">-->
-        <!--        </form>-->
-        <!--        <el-upload-->
-        <!--            class="avatar-uploader"-->
-        <!--            action="https://sm.ms/api/v2/upload"-->
-        <!--            :headers="headers"-->
-        <!--            :data="requstData"-->
-        <!--            name="smfile"-->
-        <!--            :show-file-list="false"-->
-        <!--            accept=".jpg,.jpeg,.png,.gif.JPG,.JPEG,.PNG,.GIF"-->
-        <!--            :before-upload="beforeAvatarUpload"-->
-        <!--            :on-success="handleAvatarSuccess">-->
-        <!--          <img v-if="imageUrl" :src="imageUrl" class="avatar">-->
-        <!--          <i v-else class="el-icon-plus avatar-uploader-icon"></i>-->
-        <!--        </el-upload>-->
+        <!--        <el-form-item label="书籍图片"></el-form-item>-->
+        <!--        <img src="../assets/comment.gif">-->
       </el-form>
+      <!--      <input type="file" id="fileExport" @change="updateImageToSM_MS" ref="inputer">-->
 
       <span slot="footer" class="dialog-footer">
     <el-button @click="addBookDialog = false">取 消</el-button>
-    <el-button type="primary" @click="addNewBook">确 定</el-button>
+    <el-button type="primary" @click="addNewBook('addNewBookParams')">确 定</el-button>
     </span>
     </el-dialog>
     <!--    更改头像对话框-->
     <el-dialog
         :visible.sync="changeImgDialog"
-        title="更改头像/昵称"
-        width="50%">
-      <span>这是一段信息</span>
+        title="头像背景&昵称"
+        width="20%">
+      <el-form ref="updateUserFrom" :model="updateUserFrom" :rules="rulesUser" label-width="60px">
+        <el-form-item label="昵称" prop="nickName">
+          <el-input v-model="updateUserFrom.nickName" placeholder="输入昵称" width="100px"></el-input>
+        </el-form-item>
+        <el-form-item label="" prop="userImgurl">
+          <div :class="updateUserFrom.userImgurl" style="float: left">
+            <el-avatar :size="50" style="float: left">头像</el-avatar>
+          </div>
+          <div style="float: right">
+            <el-select v-model="updateUserFrom.userImgurl" placeholder="请选择头像背景">
+              <el-option label="默认背景" value="1"></el-option>
+              <el-option label="背景一" value="imageBackground0"></el-option>
+              <el-option label="背景二" value="imageBackground1"></el-option>
+              <el-option label="背景三" value="imageBackground2"></el-option>
+              <el-option label="背景四" value="imageBackground3"></el-option>
+              <el-option label="背景五" value="imageBackground4"></el-option>
+            </el-select>
+          </div>
+        </el-form-item>
+      </el-form>
       <span slot="footer" class="dialog-footer">
     <el-button @click="changeImgDialog = false">取 消</el-button>
-    <el-button type="primary" @click="changeImgAndNickname">确 定</el-button>
+    <el-button type="primary" @click="changeImgAndNickname('updateUserFrom')">确 定</el-button>
     </span>
     </el-dialog>
   </div>
@@ -121,20 +134,56 @@ export default {
   },
   data() {
     return {
+      rulesUser: {
+        nickName: [
+          {required: true, message: "请输入昵称", trigger: "blur"},
+          {min: 2, max: 10, message: "昵称长度在2到10个字符", trigger: "blur"}
+        ],
+        userImgurl: [
+          {required: true, message: "请选择头像", trigger: "blur"}
+        ]
+      },
+      rules: {
+        bookName: [
+          {required: true, message: '请输入书籍名称', trigger: 'blur'},
+          {min: 1, max: 48, message: '书籍长度为 1 到 48 个字符', trigger: 'blur'}
+        ],
+        bookAuther: [
+          {required: true, message: '请输入作者名称', trigger: 'blur'},
+          {min: 1, max: 20, message: '作者名称长度在1 到 20个字符', trigger: 'blur'}
+        ],
+        bookIntro: [
+          {required: true, message: '请输入书籍介绍', trigger: 'blur'},
+          {min: 50, max: 1000, message: '长度在 50 到 1000 个字符', trigger: 'blur'}
+        ],
+        bookPerce: [
+          {required: true, message: '请输入读后感', trigger: 'blur'},
+          {min: 50, max: 1500, message: '长度在 50 到 1500 个字符', trigger: 'blur'}
+        ],
+      },
+      updateUserFrom: {
+        nickName: '',
+        userImgurl: ''
+      },
+      addNewBookParams: {
+        bookName: "",
+        bookAuthor: "",
+        bookIntro: "",
+        bookPerce: "",
+      },
       showDeleteButton: true,
-      showList: [
-        {name: 'first'},
-        {name: 'second'},
-        {name: 'third'},
-      ],
+      showList: [],
+      pageNum: 1,
+      pageSize: 10,
       user: {
         userEmail: '',
-        nickName: ''
+        nickName: '',
+        userId: '',
       },
       color: 'imageBackground4',
       addBookDialog: false,
       changeImgDialog: false,
-      imageUrl: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+      imageUrl: '../assets/comment.gif',
       bookFile: '',
       headers: {
         "Content-Type": "multipart/form-data",
@@ -142,60 +191,187 @@ export default {
       },
       requstData: {
         format: 'json'
+      },
+      headerConfig: {
+        headers: {
+          "Token": window.localStorage.getItem("Token")
+        }
       }
     }
   },
   mounted() {
     this.getUser();
+    this.getUserBook();
   },
   methods: {
     getUser() {
       var _self = this;
       _self.user.userEmail = this.$route.query.userEmail;
       _self.user.nickName = this.$route.query.nickName;
+      _self.user.userId = this.$route.query.userId;
+      var userEmail = _self.$route.query.userEmail;
+      var url = _self._CONTEXTURL + '/base/getUser?userEmail=' + userEmail;
+      _self.$ajax.get(url).then(function (response) {
+        if (response.data.code === 200) {
+          _self.user = response.data.data;
+        }
+      });
     },
+    getUserBook() {
+      var _self = this;
+      var userEmail = this.$route.query.userEmail;
+      var url = _self._CONTEXTURL + "/book/getUserBook?userEmail=" + userEmail + "&pageNum=" + _self.pageNum + "&pageSize=" + _self.pageSize;
+      _self.$ajax.post(url, {}, _self.headerConfig).then(function (res) {
+        if (res.data.code === 200) {
+          _self.showList = res.data.data;
+        } else {
+          _self.$message({
+            message: res.data.msg,
+            type: 'error'
+          });
+        }
+      }).catch(function (err) {
+        _self.$message({
+          message: err.data.message,
+          type: 'error'
+        });
+      });
+    },
+    //获取用户收藏的文章，主要显示作者收藏的文章
     collectBooks() {
       let _self = this;
       _self.showDeleteButton = false;
-      //  TODO 获取用户收藏的文章，主要显示作者收藏的文章
+      var url = _self._CONTEXTURL + "/bookColl/queryCollBook?collUserId=" + _self.user.userId + "&pageNum=" + _self.pageNum + "&pageSize=" + _self.pageSize;
+      _self.$ajax.post(url, {}, _self.headerConfig).then(function (res) {
+        if (res.data.code === 200) {
+          _self.showList = res.data.data;
+        } else {
+          _self.$message({
+            message: res.data.msg,
+            type: 'error'
+          });
+        }
+      }).catch(function (err) {
+        _self.$message({
+          message: err.data.message,
+          type: 'error'
+        });
+      });
     },
+    //获取作者收藏的文章,返回作者主页
     backCollect() {
       let _self = this;
       _self.showDeleteButton = true;
-      // TODO 获取作者收藏的文章,返回作者主页
+      _self.getUserBook();
     },
-    addNewBook() {
+    //TODO 上传最新的文章过程，添加可保存的文章过程（提交审核，审核结果）
+    addNewBook(addNewBookParams) {
       let _self = this;
-      _self.addBookDialog = false;
+      this.$refs[addNewBookParams].validate((valid) => {
+        if (valid) {
+          var params = _self.addNewBookParams;
+          params.userEmail = _self.user.userEmail;
+          params.bkNickName = _self.user.nickName;
+          var url = _self._CONTEXTURL + "/book/addBook";
+          _self.$ajax.post(url, params, _self.headerConfig).then(function (res) {
+            if (res.data.code === 200) {
+              _self.$message({
+                message: res.data.msg,
+                type: 'success'
+              });
+              _self.addNewBookParams = {
+                bookName: "",
+                bookAuthor: "",
+                bookIntro: "",
+                bookPerce: "",
+              };
+              _self.addBookDialog = false;
+              alert('添加书籍成功！');
+              _self.getUserBook();
+            } else {
+              _self.$message({
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
+          })
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
     },
-    changeImgAndNickname() {
+    changeImgAndNickname(updateUserFrom) {
       let _self = this;
-      _self.changeImgDialog = false;
+      this.$refs[updateUserFrom].validate((valid) => {
+        if (valid) {
+          var params = _self.updateUserFrom;
+          params.userEmail = _self.user.userEmail;
+          var url = _self._CONTEXTURL + "/user/updateInfo"
+          _self.$ajax.post(url, params, _self.headerConfig).then(function (res) {
+            if (res.data.code === 200) {
+              _self.$message({
+                message: res.data.msg,
+                type: 'success'
+              });
+              _self.updateUserFrom = {
+                userEmail: "",
+                userNickName: "",
+                userImg: "",
+              };
+              _self.changeImgDialog = false;
+              _self.getUser();
+            } else {
+              _self.$message({
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
+          })
+        } else {
+          return false;
+        }
+      });
     },
     //  图片上传
-    updateImageToSM_MS() {
+    updateImageToSM_MS(data) {
       let _self = this;
-      // var file1 = this.files[0].name;
-      // console.log(file1);
-      var file = document.getElementById('updateImg').value;
-      console.log(file);
-      let formData = new FormData();
-      formData.append('smfile', file);
-      formData.append('format', 'json');
-      // console.log("图书："+formData);
-      // let params = {};
-      // params.format = "json";
-      // params.smfile = file;
-      let url = 'https://sm.ms/api/v2/upload';
-      var config = {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": _self._Authorization
+      console.log(data.target.files[0]);
+      var Format = require('form-data')
+      var formData = new Format();
+      formData.append('file', data.target.files[0]);
+      let url = _self._CONTEXTURL + "/book/imgUpload";
+      _self.$ajax.post(url, formData, _self.headerConfig).then(function (res) {
+        console.log(res);
+        if (res.data.code === 200) {
+          _self.imageUrl = res.data.data;
+        } else {
+          _self.$message({
+            message: res.data.msg,
+            type: 'error'
+          });
         }
-      }
-      _self.$ajax.post(url, formData, config).then(function (response) {
-        console.log("返回值" + response);
+      }).catch(function (err) {
+        _self.$message({
+          message: err.data.message,
+          type: 'error'
+        });
       });
+      //  var FormData = require('form-data');
+      //  var formData = new FormData();
+      //  formData.append('format', 'json');
+      //  formData.append('smfile',data.target.files[0]);
+      //  let url = 'https://sm.ms/api/v2/upload';
+      //  var config = {
+      //    headers: {
+      //      "Content-Type": "multipart/form-data",
+      //      "Authorization": "fYqYDLv7i5y4NvdhxyaxpN7Kk6YLF140"
+      //    }
+      //  };
+      //  _self.$ajax.post(url,formData,config).then(function (response) {
+      //    console.log(response);
+      //  });
+
 
     },
     handleAvatarSuccess(res, file) {
@@ -274,5 +450,17 @@ export default {
   width: 178px;
   height: 178px;
   display: block;
+}
+
+.hidden >>> .el-aside {
+  height: 100vh;
+  background-color: #ffffff;
+  overflow-y: auto;
+  -ms-overflow-style: none; /* Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hidden01 >>> ::-webkit-scrollbar {
+  display: none; /* WebKit */
 }
 </style>

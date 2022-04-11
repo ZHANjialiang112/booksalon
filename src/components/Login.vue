@@ -25,12 +25,12 @@
       </el-form>
     </div>
 
-    <el-dialog :title=title  :visible.sync="dialogFormVisible" width="20%">
-      <el-form :model="registerParams">
-        <el-form-item label="邮箱" :label-width="formLabelWidth">
+    <el-dialog :title=title :visible.sync="dialogFormVisible" width="20%">
+      <el-form ref="registerParams" :model="registerParams" :rules="rulesRegister">
+        <el-form-item :label-width="formLabelWidth" label="邮箱" prop="userEmail">
           <el-input v-model="registerParams.userEmail" autocomplete="off" placeholder="输入用户邮箱"></el-input>
         </el-form-item>
-        <el-form-item label="密码" :label-width="formLabelWidth">
+        <el-form-item :label-width="formLabelWidth" label="密码" prop="userPassword">
           <el-input v-model="registerParams.userPassword" :show-password="true" autocomplete="off" placeholder="输入用户密码"
                     type="password"></el-input>
         </el-form-item>
@@ -43,7 +43,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="registerAndUpdate">确 定</el-button>
+        <el-button type="primary" @click="registerAndUpdate('registerParams')">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -58,6 +58,15 @@ export default {
   data() {
     return {
       title: '',
+      rulesRegister: {
+        userEmail: [
+          {required: true, message: '请输入邮箱地址', trigger: 'blur'},
+        ],
+        userPassword: [
+          {required: true, message: '请输入邮箱密码', trigger: 'blur'},
+          {min: 6, max: 12, message: '长度在 6 到 12 个字符', trigger: 'blur'}
+        ]
+      },
       loginParams: {
         userEmail: '',
         userPassword: ''
@@ -90,7 +99,7 @@ export default {
     getAuthCode() {
       let _self = this;
       var params = _self.registerParams;
-      var url = this._CONTEXTURL + "/user/getRegisterCode?titleType=" + _self.registerParams.titleType;
+      var url = this._CONTEXTURL + "/base/getRegisterCode?titleType=" + _self.registerParams.titleType;
       var config = {
         "type": "post",
         "url": url,
@@ -110,51 +119,91 @@ export default {
         }
       });
     },
-    registerAndUpdate() {
+    registerAndUpdate(registerParams) {
       var _self = this;
       var params = _self.registerParams;
-      var url = this._CONTEXTURL + "/user/updateAndRegister?authCod=" + _self.registerParams.authCode + "&titleType=" + _self.registerParams.titleType;
-      var config = {
-        "type": "post",
-        "url": url,
-        "data": params,
-      }
-      this.$ajax.post(url, params, config).then(function (response) {
-        if (response.data.code === 200) {
-          _self.$message({
-            message: response.data.msg + '，可以直接登录~',
-            type: 'success'
-          });
-          _self.loginParams.userEmail = _self.registerParams.userEmail;
-          _self.loginParams.userPassword = _self.registerParams.userPassword;
-          _self.dialogFormVisible = false;
+      this.$refs[registerParams].validate((valid) => {
+        if (valid) {
+          var data = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+          if (!data.test(params.userEmail)) {
+            _self.$message({
+              message: '请输入正确的邮箱地址',
+              type: 'warning'
+            });
+            return;
+          } else {
+            if (params.authCode === '' || params.authCode === undefined || params.authCode.length !== 6) {
+              _self.$message({
+                message: '请输入6位验证码',
+                type: 'warning'
+              });
+              return;
+            }
+            var url = this._CONTEXTURL + "/base/updateAndRegister?authCod=" + _self.registerParams.authCode + "&titleType=" + _self.registerParams.titleType;
+            var config = {
+              "type": "post",
+              "url": url,
+              "data": params,
+            }
+            this.$ajax.post(url, params, config).then(function (response) {
+              if (response.data.code === 200) {
+                _self.$message({
+                  message: response.data.msg + '，可以直接登录~',
+                  type: 'success'
+                });
+                _self.loginParams.userEmail = _self.registerParams.userEmail;
+                _self.loginParams.userPassword = _self.registerParams.userPassword;
+                _self.dialogFormVisible = false;
+              } else {
+                _self.$message({
+                  message: response.data.msg,
+                  type: 'warning'
+                });
+              }
+            });
+          }
         } else {
-          _self.$message({
-            message: response.data.msg,
-            type: 'warning'
-          });
+          console.log('error submit!!');
+          return false;
         }
       });
+
     },
     loginSubmit() {
       var _self = this;
       var params = _self.loginParams;
-      var url = this._CONTEXTURL + "/base/login"
-      this.$ajax.post(url, params).then(function (response) {
-        if (response.data.code === 200) {
+      var data = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+      if (!data.test(params.userEmail)) {
+        _self.$message({
+          message: '请输入正确的邮箱地址',
+          type: 'warning'
+        });
+        return;
+      } else {
+        if (params.userPassword.length < 6 || params.userPassword.length > 12) {
           _self.$message({
-            message: response.data.msg,
-            type: 'success'
+            message: '请输入6-12位的密码',
+            type: 'warning'
           });
-          window.localStorage.setItem("Token", response.data.data);
-          _self.router.push({path: '/index', query: {userEmail: _self.loginParams.userEmail}});
-        } else {
-          _self.$message({
-            message: response.data.msg,
-            type: 'success'
-          });
+          return;
         }
-      })
+        var url = this._CONTEXTURL + "/base/login"
+        this.$ajax.post(url, params).then(function (response) {
+          if (response.data.code === 200) {
+            _self.$message({
+              message: response.data.msg,
+              type: 'success'
+            });
+            window.localStorage.setItem("Token", response.data.data);
+            _self.router.push({path: '/index', query: {userEmail: _self.loginParams.userEmail}});
+          } else {
+            _self.$message({
+              message: response.data.msg,
+              type: 'success'
+            });
+          }
+        })
+      }
     }
   }
 }

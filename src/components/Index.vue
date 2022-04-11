@@ -5,7 +5,8 @@
         <div>
           <div class="searchDeep searchButtonDeep" style="width: 300px;float: left;margin-left: 100px">
             <el-input v-model="search" clearable placeholder="搜索">
-              <el-button slot="prepend"><a><i class="el-icon-search" style="width: 20px;"></i></a></el-button>
+              <el-button slot="prepend" @click="recommendBookList()"><a><i class="el-icon-search"
+                                                                           style="width: 20px;"></i></a></el-button>
             </el-input>
           </div>
           <div class="buttonDeep menuDeep menuDeepItem0 menuDeepItem1 menuDeepItem2 menuDeepHo"
@@ -23,7 +24,9 @@
                 </el-button>
               </el-tooltip>
               <el-button>
-                <router-link :to="{name:'homepage',query:{userEmail:user.userEmail,nickName:user.nickName}}">个人首页
+                <router-link
+                    :to="{name:'homepage',query:{userEmail:user.userEmail,nickName:user.nickName,userId:user.userId}}">
+                  个人首页
                 </router-link>
               </el-button>
             </div>
@@ -75,7 +78,6 @@ export default {
   methods: {
     handleSelect(key) {
       var _self = this;
-      console.log(key);
       if (key === '1') {
         _self.recommendBookList();
       }
@@ -95,16 +97,6 @@ export default {
         }
       });
     },
-    changeCollectStar(book) {
-      var _self = this;
-      if (_self.collectStar === 'el-icon-star-off') {
-        console.log(book);
-        _self.collectStar = 'el-icon-star-on';
-      } else if (_self.collectStar === 'el-icon-star-on') {
-        console.log(book);
-        _self.collectStar = 'el-icon-star-off';
-      }
-    },
     //推荐书籍列表
     recommendBookList() {
       var _self = this;
@@ -123,7 +115,7 @@ export default {
     //热榜书籍查询
     hotBookList() {
       var _self = this;
-      var url = _self._CONTEXTURL + '/base/getHotBook?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + _self.search + '&userId=' + _self.user.userId;
+      var url = _self._CONTEXTURL + '/base/getHotBook?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + _self.user.userId;
       _self.$ajax.post(url).then(function (response) {
         if (response.data.code === 200) {
           _self.showList = response.data.data;
