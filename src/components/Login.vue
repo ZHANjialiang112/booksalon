@@ -17,7 +17,15 @@
                  oninput="setCustomValidity('');">
           <label>密码</label>
         </div>
-        <el-button style="color: #ffffff;" type="text" @click="loginSubmit">登录</el-button>
+        <div>
+          <div style="float: left;margin-left: 10px">
+            <el-checkbox v-model="checked">记住我</el-checkbox>
+          </div>
+          <div style="float: right;margin-right: 140px">
+            <el-button style="color: #ffffff;" type="text" @click="loginSubmit">登录</el-button>
+          </div>
+        </div>
+        <br><br>
         <p style="color: white">------------------------</p>
         <el-button style="color: #606266;" type="text" @click="registerButton">注册</el-button>
         <el-button style="color: #606266;" type="text" @click="updateButton">忘记/修改密码</el-button>
@@ -50,6 +58,7 @@
 </template>
 
 <script>
+const Base64 = require('js-base64').Base64
 export default {
   name: 'Login',
   props: {
@@ -57,6 +66,7 @@ export default {
   },
   data() {
     return {
+      checked: false,
       title: '',
       rulesRegister: {
         userEmail: [
@@ -80,6 +90,9 @@ export default {
       dialogFormVisible: false,
       formLabelWidth: '120px'
     };
+  },
+  created() {
+    this.getRememberMe()
   },
   methods: {
     registerButton() {
@@ -190,6 +203,9 @@ export default {
         var url = this._CONTEXTURL + "/base/login"
         this.$ajax.post(url, params).then(function (response) {
           if (response.data.code === 200) {
+            if (_self.checked === true) {
+              _self.rememberMe();
+            }
             _self.$message({
               message: response.data.msg,
               type: 'success'
@@ -204,6 +220,28 @@ export default {
           }
         })
       }
+    },
+    rememberMe() {
+      let _self = this;
+      if (_self.checked === true) {
+        window.localStorage.setItem("userEmail", _self.loginParams.userEmail);
+        window.localStorage.setItem("userPassword", _self.loginParams.userPassword);
+      } else {
+        window.localStorage.removeItem("userEmail");
+        window.localStorage.removeItem("userPassword");
+      }
+    },
+    getRememberMe() {
+      let _self = this;
+      let userEmail = window.localStorage.getItem("userEmail");
+      let userPassword = window.localStorage.getItem("userPassword");
+      // 如果存在赋值给表单，并且将记住密码勾选
+      if (userEmail !== null && userPassword !== null) {
+        _self.loginParams.userEmail = userEmail;
+        _self.loginParams.userPassword = userPassword;
+        _self.checked = true;
+      }
+      console.log(_self.loginParams);
     }
   }
 }

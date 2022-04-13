@@ -5,7 +5,9 @@ import ElementUI from 'element-ui'; // 2.1引入结构
 import 'element-ui/lib/theme-chalk/index.css'; // 2.2引入样式
 import axios from 'axios';
 import router from "./router/index";
+import cookie from 'cookie'
 
+Vue.prototype.$cookie = cookie;
 Vue.prototype.$ajax = axios
 Vue.prototype.router = router
 Vue.config.productionTip = false

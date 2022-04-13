@@ -33,7 +33,7 @@
                 </el-dropdown-item>
                 <el-dropdown-item icon="el-icon-s-tools" @click.native="changeImgDialog = true">昵称/头像</el-dropdown-item>
                 <el-dropdown-item icon="el-icon-switch-button">
-                  <router-link to="/logout">退出登录</router-link>
+                  <a @click="logOut">退出登录</a>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -50,7 +50,9 @@
         <!--        书籍展示卡-->
         <BookCard :delete-button="showDeleteButton" :show-list="showList" :user="user"></BookCard>
       </el-main>
-      <el-footer>Footer</el-footer>
+      <el-footer>
+        <Footer></Footer>
+      </el-footer>
     </el-container>
     <!--    添加文章对话框-->
     <el-dialog
@@ -126,11 +128,12 @@
 
 <script>
 import BookCard from "@/components/BookCard";
-
+import Footer from "@/components/Footer";
 export default {
   name: "HomePage",
   components: {
-    BookCard
+    BookCard,
+    Footer
   },
   data() {
     return {
@@ -204,6 +207,25 @@ export default {
     this.getUserBook();
   },
   methods: {
+    logOut() {
+      let _self = this;
+      this.$confirm('确定退出登录吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        window.localStorage.removeItem("Token");
+        _self.router.push({path: '/index'});
+        _self.user.userEmail = '';
+        _self.user.nickName = '';
+        _self.user.userId = '';
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        });
+      });
+    },
     getUser() {
       var _self = this;
       _self.user.userEmail = this.$route.query.userEmail;
@@ -296,7 +318,6 @@ export default {
             }
           })
         } else {
-          console.log('error submit!!');
           return false;
         }
       });
@@ -342,7 +363,6 @@ export default {
       formData.append('file', data.target.files[0]);
       let url = _self._CONTEXTURL + "/book/imgUpload";
       _self.$ajax.post(url, formData, _self.headerConfig).then(function (res) {
-        console.log(res);
         if (res.data.code === 200) {
           _self.imageUrl = res.data.data;
         } else {

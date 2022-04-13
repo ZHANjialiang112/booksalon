@@ -12,12 +12,15 @@
           <div>
             <!--              图书图片-->
             <div style="float: left;height: 290px;width: 250px">
-              <el-avatar :size="230" shape="square"
-                         src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
-                         style="margin-top: 15px"></el-avatar>
+              <!--              <el-avatar :size="230" shape="square"-->
+              <!--                         src="../assets/comment.gif"-->
+              <!--                         style="margin-top: 15px">{{item.bookName}}</el-avatar>-->
+              <img src="../assets/book.jpg" style="width: 230px;height: 230px">
               <div style="position:relative;float: left;width: 100%;height: 35px">
                 <span
-                    style="float:left;margin-left: 40px;font-size: 24px;text-align: left;">{{ item.bookAuther }}(著)</span>
+                    style="float:left;margin-left: 40px;font-size: 24px;text-align: left;">{{
+                    item.bookAuther
+                  }}(著)</span>
               </div>
             </div>
             <!--              图书的简介和发布者的感悟-->
@@ -70,12 +73,12 @@
             <!--            删除文章按钮-->
             <div v-if="deleteButton" class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
               <el-tooltip class="item" content="删除" effect="light" placement="bottom-start">
-                <el-button @click="showComment(item)"><i class="el-icon-delete"></i></el-button>
+                <el-button @click="open(item)"><i class="el-icon-delete"></i></el-button>
               </el-tooltip>
             </div>
             <div v-if="deleteButton" class="buttonDeep buttonIconFocus buttonIconHover" style="float: right;width: 10%">
               <el-tooltip class="item" content="修改" effect="light" placement="bottom-start">
-                <el-button @click="showComment(item)"><i class="el-icon-edit-outline"></i></el-button>
+                <el-button @click="openUpdateDialog(item)"><i class="el-icon-edit-outline"></i></el-button>
               </el-tooltip>
             </div>
           </div>
@@ -85,6 +88,7 @@
       </el-col>
     </el-row>
     <div class="dialogDeep">
+      <!--      评论对话框-->
       <el-dialog
           :visible.sync="dialogVisible"
           title="全部评论"
@@ -120,6 +124,45 @@
   </span>
       </el-dialog>
     </div>
+    <!--    更改文章对话框-->
+    <el-dialog
+        :visible.sync="updateBookDialog"
+        title="修改文章内容"
+        width="30%">
+      <el-form ref="updateBookParams" :model="updateBookParams" :rules="rules" class="demo-ruleForm"
+               label-width="100px">
+        <el-form-item label="分享书名" prop="bookName">
+          <el-input v-model="updateBookParams.bookName"
+                    placeholder="输入书名"></el-input>
+        </el-form-item>
+        <el-form-item label="作者" prop="bookAuther">
+          <el-input v-model="updateBookParams.bookAuther"
+                    placeholder="输入作者名称"></el-input>
+        </el-form-item>
+        <el-form-item label="简介" prop="bookIntro">
+          <el-input v-model="updateBookParams.bookIntro"
+                    :autosize="{ minRows: 2, maxRows: 5}" maxlength="1000"
+                    placeholder="书籍介绍"
+                    show-word-limit
+                    type="textarea"></el-input>
+        </el-form-item>
+        <el-form-item label="个人感悟" prop="bookPerce">
+          <el-input v-model="updateBookParams.bookPerce"
+                    :autosize="{ minRows: 2, maxRows: 5}" maxlength="1500"
+                    placeholder="输入读后感"
+                    show-word-limit
+                    type="textarea"></el-input>
+        </el-form-item>
+        <!--        <el-form-item label="书籍图片"></el-form-item>-->
+        <!--        <img src="../assets/comment.gif">-->
+      </el-form>
+      <!--      <input type="file" id="fileExport" @change="updateImageToSM_MS" ref="inputer">-->
+
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="updateBookDialog = false">取 消</el-button>
+    <el-button type="primary" @click="updateBook('updateBookParams')">确 定</el-button>
+    </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -144,8 +187,34 @@ export default {
   components: {},
   data() {
     return {
+      rules: {
+        bookName: [
+          {required: true, message: '请输入书籍名称', trigger: 'blur'},
+          {min: 1, max: 48, message: '书籍长度为 1 到 48 个字符', trigger: 'blur'}
+        ],
+        bookAuther: [
+          {required: true, message: '请输入作者名称', trigger: 'blur'},
+          {min: 1, max: 20, message: '作者名称长度在1 到 20个字符', trigger: 'blur'}
+        ],
+        bookIntro: [
+          {required: true, message: '请输入书籍介绍', trigger: 'blur'},
+          {min: 50, max: 1000, message: '长度在 50 到 1000 个字符', trigger: 'blur'}
+        ],
+        bookPerce: [
+          {required: true, message: '请输入读后感', trigger: 'blur'},
+          {min: 50, max: 1500, message: '长度在 50 到 1500 个字符', trigger: 'blur'}
+        ],
+      },
+      src: '',
       //用户可以选择既定的背景颜色
-      color: 'imageBackground4',
+      updateBookDialog: false,
+      updateBookParams: {
+        bookId: '',
+        bookName: "",
+        bookAuthor: "",
+        bookIntro: "",
+        bookPerce: "",
+      },
       commentList: [],
       dialogVisible: false,
       comment: '',
@@ -175,6 +244,80 @@ export default {
   mounted() {
   },
   methods: {
+    open(book) {
+      this.$confirm('此操作将永久删除该文章,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteBook(book);
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+    },
+    //用户删除文章
+    deleteBook(book) {
+      let _self = this;
+      let url = _self._CONTEXTURL + '/book/deleteBook?bookId=' + book.bookId + "&userEmail=" + _self.user.userEmail;
+      _self.$ajax.post(url, {}, _self.headerConfig).then(function (res) {
+        if (res.data.code === 200) {
+          _self.$message({
+            message: '删除成功',
+            type: 'success'
+          });
+          _self.showList.splice(_self.showList.indexOf(book), 1);
+        } else {
+          _self.$message({
+            message: res.data.msg,
+            type: 'error'
+          });
+        }
+      }).catch(function (err) {
+        _self.$message({
+          message: '删除失败',
+          type: 'error'
+        });
+      });
+    },
+    //打开更改文章对话框
+    openUpdateDialog(book) {
+      var _self = this;
+      _self.updateBookDialog = true;
+      _self.updateBookParams = book;
+    },
+    //更新文章
+    updateBook(updateBookParams) {
+      var _self = this;
+      this.$refs[updateBookParams].validate((valid) => {
+        if (valid) {
+          var url = _self._CONTEXTURL + "/book/updateBook";
+          _self.$ajax.post(url, _self.updateBookParams, _self.headerConfig).then(function (res) {
+            if (res.data.code === 200) {
+              _self.$message({
+                message: '更新成功',
+                type: 'success'
+              });
+              _self.updateBookDialog = false;
+            } else {
+              _self.$message({
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
+          }).catch(function (err) {
+            _self.$message({
+              message: '更新失败',
+              type: 'error'
+            });
+          });
+        } else {
+          return false;
+        }
+      });
+    },
     //用户收藏的相关操作（判断用户是否登录）
     changeCollectStar(book) {
       var _self = this;

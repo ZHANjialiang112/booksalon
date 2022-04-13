@@ -5,8 +5,8 @@
         <div>
           <div class="searchDeep searchButtonDeep" style="width: 300px;float: left;margin-left: 100px">
             <el-input v-model="search" clearable placeholder="搜索">
-              <el-button slot="prepend" @click="recommendBookList()"><a><i class="el-icon-search"
-                                                                           style="width: 20px;"></i></a></el-button>
+              <el-button slot="prepend" @click="recommendBookList('')"><a><i class="el-icon-search"
+                                                                             style="width: 20px;"></i></a></el-button>
             </el-input>
           </div>
           <div class="buttonDeep menuDeep menuDeepItem0 menuDeepItem1 menuDeepItem2 menuDeepHo"
@@ -20,7 +20,8 @@
             <div v-if="user.nickName" style="float: right">
               <el-tooltip class="item" content="退出登录" effect="light" placement="bottom">
                 <el-button style="margin-right: 50px"><i class="el-icon-s-custom" style="margin-right: 15px"></i>
-                  <router-link to="/logout">{{ user.nickName }}</router-link>
+                  <a @click="logOut">{{ user.nickName }}</a>
+                  <!--                  <router-link to="/logout"></router-link>-->
                 </el-button>
               </el-tooltip>
               <el-button>
@@ -42,19 +43,22 @@
         <!--        书籍展示卡-->
         <BookCard :delete-button="false" :show-list="showList" :user="user"></BookCard>
       </el-main>
-      <el-footer>Footer</el-footer>
+      <el-footer>
+        <Footer></Footer>
+      </el-footer>
     </el-container>
   </div>
 </template>
 
 <script>
 import BookCard from './BookCard';
-
+import Footer from './Footer';
 export default {
   name: "Index",
   props: {},
   components: {
-    BookCard
+    BookCard,
+    Footer
   },
   data() {
     return {
@@ -73,34 +77,55 @@ export default {
   },
   mounted() {
     this.getUser();
-    this.recommendBookList();
   },
   methods: {
+    logOut() {
+      let _self = this;
+      this.$confirm('确定退出登录吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        window.localStorage.removeItem("Token");
+        _self.router.push({path: '/index'});
+        _self.user.nickName = '';
+        _self.user.userEmail = '';
+        _self.user.userId = '';
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        });
+      });
+    },
     handleSelect(key) {
       var _self = this;
       if (key === '1') {
-        _self.recommendBookList();
+        _self.recommendBookList('');
       }
       if (key === '2') {
         _self.hotBookList();
       }
     },
-    getUser() {
-      var _self = this;
+    async getUser() {
+      let _self = this;
       _self.user.userEmail = _self.$route.query.userEmail;
-      var userEmail = _self.$route.query.userEmail;
-      var url = _self._CONTEXTURL + '/base/getUser?userEmail=' + userEmail;
-      _self.$ajax.get(url).then(function (response) {
-        if (response.data.code === 200) {
-          _self.user.nickName = response.data.data.nickName;
-          _self.user.userId = response.data.data.userId;
-        }
-      });
+      let userEmail = _self.$route.query.userEmail;
+      if (userEmail === '' || userEmail === undefined) {
+        _self.recommendBookList('');
+      } else {
+        let url = _self._CONTEXTURL + '/base/getUser?userEmail=' + userEmail;
+        let response = await _self.$ajax.get(url);
+        _self.user.userId = response.data.data.userId;
+        _self.user.nickName = response.data.data.nickName;
+        _self.user.userEmail = response.data.data.userEmail;
+        _self.recommendBookList(response.data.data.userId);
+      }
     },
     //推荐书籍列表
-    recommendBookList() {
+    recommendBookList(userId) {
       var _self = this;
-      var url = _self._CONTEXTURL + '/base/getBookPage?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + _self.user.userId;
+      var url = _self._CONTEXTURL + '/base/getBookPage?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + userId;
       _self.$ajax.post(url).then(function (response) {
         if (response.data.code === 200) {
           _self.showList = response.data.data;
@@ -114,8 +139,8 @@ export default {
     },
     //热榜书籍查询
     hotBookList() {
-      var _self = this;
-      var url = _self._CONTEXTURL + '/base/getHotBook?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + _self.user.userId;
+      let _self = this;
+      let url = _self._CONTEXTURL + '/base/getHotBook?pageNum=' + _self.pageNum + '&pageSize=' + _self.pageSize + '&search=' + _self.search + '&userId=' + _self.user.userId;
       _self.$ajax.post(url).then(function (response) {
         if (response.data.code === 200) {
           _self.showList = response.data.data;
